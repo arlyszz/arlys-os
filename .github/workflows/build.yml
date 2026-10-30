@@ -18,16 +18,15 @@ jobs:
 
       - name: Run Build Script
         run: |
-          chmod +x build.sh
-          sudo bash build.sh
+          chmod +x arlys-bootstrap.sh
+          sudo bash arlys-bootstrap.sh
 
       - name: Ambil File ISO
         run: |
-          sudo cp /root/arlys-build/dist/ARLYS-OS.iso ./ARLYS-OS.iso
-          sudo chown runner:runner ./ARLYS-OS.iso
+          find . -name "*.iso"
 
       - name: Upload ISO
         uses: actions/upload-artifact@v4
         with:
           name: ARLYS-OS-ISO
-          path: ARLYS-OS.iso
+          path: "**/*.iso"
