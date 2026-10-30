@@ -19,11 +19,11 @@ jobs:
             cd /build && \
             chmod +x arlys-bootstrap.sh && \
             ./arlys-bootstrap.sh && \
-            cp /root/arlys-build/dist/ARLYS-OS.iso /build/ARLYS-OS.iso
+            cp /root/arlys-build/dist/ARLYS-OS-V3.iso /build/ARLYS-OS-V3.iso
           "
 
       - name: Upload ISO Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ARLYS-OS-ISO
-          path: ARLYS-OS.iso
+          name: ARLYS-OS-V3-ISO
+          path: ARLYS-OS-V3.iso
