@@ -44,7 +44,6 @@ lightdm
 lightdm-gtk-greeter
 network-manager
 network-manager-gnome
-xfce4-statusnotifier-plugin
 xfce4-pulseaudio-plugin
 xfce4-power-manager
 chromium
