@@ -1,6 +1,6 @@
 #!/bin/bash
 # ==============================================================================
-# ARLYS OS V4.1 - ULTRA KOIOS (Optimized, Anti-Error, Feature Rich)
+# ARLYS OS V4.1 - ULTRA KOIOS (Final Fixed - wget & gpg added)
 # ==============================================================================
 set -euo pipefail
 
@@ -63,6 +63,8 @@ zram-tools
 htop
 nano
 curl
+wget
+gnupg
 sudo
 fonts-inter
 fonts-dejavu-core
@@ -126,7 +128,7 @@ if [ -f /usr/share/applications/org.gnome.Software.desktop ]; then
     echo "NoDisplay=true" >> /usr/share/applications/org.gnome.Software.desktop
 fi
 
-# 5. INSTALL VS CODE JADI "KOIOS CODE" (Tambahan || true biar gak gagal build)
+# 5. INSTALL VS CODE JADI "KOIOS CODE"
 mkdir -p /etc/apt/keyrings
 wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
 install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
