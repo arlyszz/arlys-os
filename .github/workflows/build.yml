@@ -1,4 +1,5 @@
 name: Build ARLYS OS ISO
+name: Build ARLYS OS ISO
 
 on: 
   push:
@@ -19,11 +20,11 @@ jobs:
             cd /build && \
             chmod +x arlys-bootstrap.sh && \
             ./arlys-bootstrap.sh && \
-            cp /root/arlys-build/dist/ARLYS-OS-V3.iso /build/ARLYS-OS-V3.iso
+            cp /root/arlys-build/dist/ARLYS-OS-V4.iso /build/ARLYS-OS-V4.iso
           "
 
       - name: Upload ISO Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ARLYS-OS-V3-ISO
-          path: ARLYS-OS-V3.iso
+          name: ARLYS-OS-V4-ISO
+          path: ARLYS-OS-V4.iso
