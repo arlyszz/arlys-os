@@ -1,6 +1,6 @@
 #!/bin/bash
 # ==============================================================================
-# ARLYS OS V4.0 (KOIOS) - FINAL OPTIMIZED BUILD
+# ARLYS OS V4.1 - ULTRA KOIOS (Optimized, Anti-Error, Feature Rich)
 # ==============================================================================
 set -euo pipefail
 
@@ -18,7 +18,7 @@ echo "[1/5] Install dependency dasar..."
 apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install -y \
     live-build debootstrap squashfs-tools xorriso \
-    grub-pc-bin grub-efi-amd64-bin mtools dosfstools zip curl wget gpg
+    grub-pc-bin grub-efi-amd64-bin mtools dosfstools zip curl wget gpg xz-utils
 
 echo "[2/5] Meracik Folder OS..."
 lb clean --purge || true
@@ -29,8 +29,7 @@ mkdir -p config/includes.chroot/etc/skel/.config/plank/dock1/launchers
 mkdir -p config/includes.chroot/usr/share/backgrounds
 mkdir -p config/includes.chroot/usr/share/plymouth/themes/koios
 
-echo "[3/5] Memasukkan Paket Aplikasi, VS Code, Game, & WiFi..."
-
+echo "[3/5] Memasukkan Paket Aplikasi, Game, & Tools..."
 cat > config/package-lists/arlys.list.chroot <<'EOF'
 live-boot
 live-config
@@ -45,15 +44,23 @@ lightdm
 lightdm-gtk-greeter
 network-manager
 network-manager-gnome
-xfce4-network-manager-plugin
+xfce4-statusnotifier-plugin
 xfce4-pulseaudio-plugin
 xfce4-power-manager
 chromium
+vlc
+abiword
+gnumeric
+gparted
+neofetch
 plymouth
 plymouth-themes
 gnome-software
-gnome-games
+gnome-mines
+gnome-sudoku
+gnome-chess
 sgt-puzzles
+zram-tools
 htop
 nano
 curl
@@ -75,10 +82,10 @@ set -e
 
 # 1. HAPUS TOTAL BRANDING DEBIAN & UBAH JADI KOIOS
 cat > /etc/os-release <<'EOT'
-PRETTY_NAME="ARLYS OS 4.0 (KOIOS)"
+PRETTY_NAME="ARLYS OS 4.1 (KOIOS)"
 NAME="ARLYS OS"
-VERSION_ID="4.0"
-VERSION="4.0 (KOIOS)"
+VERSION_ID="4.1"
+VERSION="4.1 (Ultra)"
 ID=arlys
 ID_LIKE=linux
 HOME_URL="https://koistudio.example/arlys"
@@ -86,9 +93,9 @@ EOT
 echo "koios" > /etc/hostname
 echo "127.0.1.1 koios" >> /etc/hosts
 rm -f /etc/debian_version
-echo "ARLYS OS 4.0 (KOIOS) \\n \\l" > /etc/issue
+echo "ARLYS OS 4.1 (KOIOS) \\n \\l" > /etc/issue
 
-# Ubah prompt terminal jadi arlys@koios
+# Terminal Prompt
 echo "export PS1='\[\e[1;36m\]arlys@koios\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\]\$ '" >> /etc/bash.bashrc
 
 # 2. BUAT USER
@@ -113,21 +120,21 @@ for i in range(400, 0, -1):
 img.save('/usr/share/backgrounds/arlys-bg.jpg', 'JPEG')
 "
 
-# 4. UBAH NAMA APP STORE JADI "KOIOS STORE"
+# 4. UBAH NAMA APP STORE
 if [ -f /usr/share/applications/org.gnome.Software.desktop ]; then
     cp /usr/share/applications/org.gnome.Software.desktop /usr/share/applications/koios-store.desktop
     sed -i 's/^Name=.*/Name=KOIOS Store/' /usr/share/applications/koios-store.desktop
     echo "NoDisplay=true" >> /usr/share/applications/org.gnome.Software.desktop
 fi
 
-# 5. INSTALL & UBAH NAMA VS CODE JADI "KOIOS CODE"
+# 5. INSTALL VS CODE JADI "KOIOS CODE" (Tambahan || true biar gak gagal build)
 mkdir -p /etc/apt/keyrings
 wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
 install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
 echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list
 rm -f packages.microsoft.gpg
-apt-get update
-apt-get install -y code
+apt-get update || true
+apt-get install -y code || true
 if [ -f /usr/share/applications/code.desktop ]; then
     cp /usr/share/applications/code.desktop /usr/share/applications/koios-code.desktop
     sed -i 's/^Name=.*/Name=KOIOS Code/' /usr/share/applications/koios-code.desktop
@@ -158,7 +165,6 @@ Plymouth.SetRefreshFunction(function() {
     title_sprite.SetOpacity(progress);
 });
 XML
-
 plymouth-set-default-theme koios || true
 
 # 7. SETUP DESKTOP XFCE (TEMA GELAP & PANEL RAPI)
@@ -172,7 +178,7 @@ cat > /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml <<'XML'
 </channel>
 XML
 
-# Setup Panel (Jam & Tray di Kanan)
+# Panel Bawah yang Jauh Lebih Rapi
 cat > /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml <<'XML'
 <?xml version="1.0" encoding="UTF-8"?>
 <channel name="xfce4-panel" version="1.0">
@@ -183,22 +189,26 @@ cat > /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml <<'XML'
     <property name="position" type="string" value="p=8;x=0;y=0"/>
     <property name="length" type="uint" value="100"/>
     <property name="position-locked" type="bool" value="true"/>
-    <property name="size" type="uint" value="32"/>
+    <property name="size" type="uint" value="36"/>
     <property name="plugin-ids" type="array">
       <value type="int" value="1"/>
       <value type="int" value="2"/>
       <value type="int" value="3"/>
+      <value type="int" value="4"/>
+      <value type="int" value="5"/>
     </property>
   </property>
   <property name="plugins" type="empty">
     <property name="plugin-1" type="string" value="whiskermenu"/>
-    <property name="plugin-2" type="string" value="systray"/>
-    <property name="plugin-3" type="string" value="clock"/>
+    <property name="plugin-2" type="string" value="tasklist"/>
+    <property name="plugin-3" type="string" value="separator"/>
+    <property name="plugin-4" type="string" value="systray"/>
+    <property name="plugin-5" type="string" value="clock"/>
   </property>
 </channel>
 XML
 
-# Autostart Dock & Network
+# Autostart Dock
 cat > /etc/xdg/autostart/plank.desktop <<'XML'
 [Desktop Entry]
 Type=Application
@@ -234,10 +244,16 @@ background = /usr/share/backgrounds/arlys-bg.jpg
 EOT
 
 systemctl enable lightdm NetworkManager || true
+
+# 8. OPTIMALISASI: HAPUS FILE SAMPAH & CACHE
+apt-get clean
+rm -rf /var/lib/apt/lists/*
+rm -rf /usr/share/doc/*
+rm -rf /usr/share/man/*
 EOF
 chmod +x config/hooks/live/0100-arlys-v4.hook.chroot
 
-echo "[5/5] Build ISO V4 (20-40 menit)..."
+echo "[5/5] Build ISO V4.1 (Proses ini lama, sabar ya)..."
 lb config \
     --mode debian \
     --distribution bookworm \
@@ -252,8 +268,10 @@ lb config \
     --bootloader "grub-efi grub-pc" \
     --debian-installer false \
     --iso-application "ARLYS OS" \
-    --iso-volume "ARLYS_KOIOS" \
+    --iso-volume "ARLYS_KOIOS_ULTRA" \
     --memtest none \
+    --chroot-filesystem squashfs \
+    --compression xz \
     --bootappend-live "boot=live components quiet splash"
 
 lb build
