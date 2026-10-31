@@ -1,5 +1,4 @@
 name: Build ARLYS OS ISO
-name: Build ARLYS OS ISO
 
 on: 
   push:
@@ -12,16 +11,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Build ISO inside Docker (Full Root Access)
+      - name: Build ISO inside Docker
         run: |
-          docker run --rm --privileged -v ${{ github.workspace }}:/build debian:bookworm /bin/bash -c "
-            apt-get update && \
-            apt-get install -y live-build debootstrap squashfs-tools xorriso grub-pc-bin grub-efi-amd64-bin mtools dosfstools zip curl && \
-            cd /build && \
-            chmod +x arlys-bootstrap.sh && \
-            ./arlys-bootstrap.sh && \
-            cp /root/arlys-build/dist/ARLYS-OS-V4.iso /build/ARLYS-OS-V4.iso
-          "
+          docker run --rm --privileged -v ${{ github.workspace }}:/build debian:bookworm bash -c "apt-get update && apt-get install -y live-build debootstrap squashfs-tools xorriso grub-pc-bin grub-efi-amd64-bin mtools dosfstools zip curl wget gpg && cd /build && chmod +x arlys-bootstrap.sh && ./arlys-bootstrap.sh && cp /root/arlys-build/dist/ARLYS-OS-V4.iso /build/ARLYS-OS-V4.iso"
 
       - name: Upload ISO Artifact
         uses: actions/upload-artifact@v4
