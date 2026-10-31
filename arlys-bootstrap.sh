@@ -1,8 +1,6 @@
 #!/bin/bash
 # ==============================================================================
-# ARLYS OS V3.0 - ULTIMATE EDITION (1 FILE SCRIPT)
-# Tampilan Modern, Dock Bawah, Internet, Jam Real-time, Games, App Store.
-# 100% Bebas Branding Debian!
+# ARLYS OS V4.0 (KOIOS) - FINAL OPTIMIZED BUILD
 # ==============================================================================
 set -euo pipefail
 
@@ -20,17 +18,18 @@ echo "[1/5] Install dependency dasar..."
 apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install -y \
     live-build debootstrap squashfs-tools xorriso \
-    grub-pc-bin grub-efi-amd64-bin mtools dosfstools zip curl
+    grub-pc-bin grub-efi-amd64-bin mtools dosfstools zip curl wget gpg
 
 echo "[2/5] Meracik Folder OS..."
 lb clean --purge || true
 mkdir -p config/package-lists config/hooks/live config/includes.chroot/etc/lightdm
 mkdir -p config/includes.chroot/etc/xdg/autostart
+mkdir -p config/includes.chroot/etc/xdg/xfce4/xfconf/xfce-perchannel-xml
 mkdir -p config/includes.chroot/etc/skel/.config/plank/dock1/launchers
 mkdir -p config/includes.chroot/usr/share/backgrounds
-mkdir -p config/includes.chroot/usr/share/plymouth/themes/arlys
+mkdir -p config/includes.chroot/usr/share/plymouth/themes/koios
 
-echo "[3/5] Memasukkan Paket Aplikasi & Game (100% ARLYS)..."
+echo "[3/5] Memasukkan Paket Aplikasi, VS Code, Game, & WiFi..."
 
 cat > config/package-lists/arlys.list.chroot <<'EOF'
 live-boot
@@ -46,6 +45,9 @@ lightdm
 lightdm-gtk-greeter
 network-manager
 network-manager-gnome
+xfce4-network-manager-plugin
+xfce4-pulseaudio-plugin
+xfce4-power-manager
 chromium
 plymouth
 plymouth-themes
@@ -66,33 +68,37 @@ python3
 python3-pil
 EOF
 
-echo "[4/5] Menyuntikkan Tema, Jam, Wallpaper, dan Branding ARLYS..."
-cat > config/hooks/live/0100-arlys-v3.hook.chroot <<'EOF'
+echo "[4/5] Konfigurasi Total (Anti-Debian, KOIOS Store, dll)..."
+cat > config/hooks/live/0100-arlys-v4.hook.chroot <<'EOF'
 #!/bin/sh
 set -e
 
-# 1. HAPUS TOTAL BRANDING DEBIAN
+# 1. HAPUS TOTAL BRANDING DEBIAN & UBAH JADI KOIOS
 cat > /etc/os-release <<'EOT'
-PRETTY_NAME="ARLYS OS 3.0"
+PRETTY_NAME="ARLYS OS 4.0 (KOIOS)"
 NAME="ARLYS OS"
-VERSION_ID="3.0"
-VERSION="3.0 (Ultimate)"
+VERSION_ID="4.0"
+VERSION="4.0 (KOIOS)"
 ID=arlys
 ID_LIKE=linux
 HOME_URL="https://koistudio.example/arlys"
 EOT
-echo "arlys" > /etc/hostname
-grep -q '^127.0.1.1' /etc/hosts || echo "127.0.1.1 arlys" >> /etc/hosts
-echo "ARLYS OS 3.0 \\n \\l" > /etc/issue
+echo "koios" > /etc/hostname
+echo "127.0.1.1 koios" >> /etc/hosts
+rm -f /etc/debian_version
+echo "ARLYS OS 4.0 (KOIOS) \\n \\l" > /etc/issue
 
-# 2. USER & PASSWORD
+# Ubah prompt terminal jadi arlys@koios
+echo "export PS1='\[\e[1;36m\]arlys@koios\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\]\$ '" >> /etc/bash.bashrc
+
+# 2. BUAT USER
 if ! id arlys >/dev/null 2>&1; then
     useradd -m -s /bin/bash -G sudo,audio,video,netdev,plugdev,cdrom arlys
     echo "arlys:arlys" | chpasswd
 fi
 echo "arlys ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/arlys
 
-# 3. WALLPAPER KUSTOM (PILIHAN)
+# 3. WALLPAPER KUSTOM
 python3 -c "
 from PIL import Image, ImageDraw
 W, H = 1920, 1080
@@ -107,11 +113,55 @@ for i in range(400, 0, -1):
 img.save('/usr/share/backgrounds/arlys-bg.jpg', 'JPEG')
 "
 
-# 4. JAM REAL-TIME (SINKRONISASI INTERNET)
-systemctl enable systemd-timesyncd || true
+# 4. UBAH NAMA APP STORE JADI "KOIOS STORE"
+if [ -f /usr/share/applications/org.gnome.Software.desktop ]; then
+    cp /usr/share/applications/org.gnome.Software.desktop /usr/share/applications/koios-store.desktop
+    sed -i 's/^Name=.*/Name=KOIOS Store/' /usr/share/applications/koios-store.desktop
+    echo "NoDisplay=true" >> /usr/share/applications/org.gnome.Software.desktop
+fi
 
-# 5. TEMA XFCE (MODE GELAP ELEGAN + DOCK)
-mkdir -p /etc/xdg/xfce4/xfconf/xfce-perchannel-xml
+# 5. INSTALL & UBAH NAMA VS CODE JADI "KOIOS CODE"
+mkdir -p /etc/apt/keyrings
+wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list
+rm -f packages.microsoft.gpg
+apt-get update
+apt-get install -y code
+if [ -f /usr/share/applications/code.desktop ]; then
+    cp /usr/share/applications/code.desktop /usr/share/applications/koios-code.desktop
+    sed -i 's/^Name=.*/Name=KOIOS Code/' /usr/share/applications/koios-code.desktop
+    echo "NoDisplay=true" >> /usr/share/applications/code.desktop
+fi
+
+# 6. INTRO BOOT (PLYMOUTH KOIOS)
+cat > /usr/share/plymouth/themes/koios/koios.plymouth <<'XML'
+[Plymouth Theme]
+Name=KOIOS
+Description=ARLYS OS KOIOS Boot
+ModuleName=script
+[script]
+ImageDir=/usr/share/plymouth/themes/koios
+ScriptFile=/usr/share/plymouth/themes/koios/koios.script
+XML
+
+cat > /usr/share/plymouth/themes/koios/koios.script <<'XML'
+Window.SetBackgroundTopColor(0.02, 0.03, 0.05);
+Window.SetBackgroundBottomColor(0.01, 0.01, 0.02);
+title_image = Image.Text("KOIOS", 1, 1, 1);
+title_sprite = Sprite(title_image);
+title_sprite.SetX(Window.GetWidth() / 2 - title_image.GetWidth() / 2);
+title_sprite.SetY(Window.GetHeight() / 2 - title_image.GetHeight() / 2);
+Plymouth.SetRefreshFunction(function() {
+    progress = Plymouth.GetBootProgress();
+    if (progress > 1) progress = 1;
+    title_sprite.SetOpacity(progress);
+});
+XML
+
+plymouth-set-default-theme koios || true
+
+# 7. SETUP DESKTOP XFCE (TEMA GELAP & PANEL RAPI)
 cat > /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml <<'XML'
 <?xml version="1.0" encoding="UTF-8"?>
 <channel name="xsettings" version="1.0">
@@ -122,7 +172,33 @@ cat > /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml <<'XML'
 </channel>
 XML
 
-# 6. AUTOSTART PLANK DOCK (MAC-STYLE) & NETWORK
+# Setup Panel (Jam & Tray di Kanan)
+cat > /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml <<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfce4-panel" version="1.0">
+  <property name="panels" type="array">
+    <value type="int" value="1"/>
+  </property>
+  <property name="panel-1" type="empty">
+    <property name="position" type="string" value="p=8;x=0;y=0"/>
+    <property name="length" type="uint" value="100"/>
+    <property name="position-locked" type="bool" value="true"/>
+    <property name="size" type="uint" value="32"/>
+    <property name="plugin-ids" type="array">
+      <value type="int" value="1"/>
+      <value type="int" value="2"/>
+      <value type="int" value="3"/>
+    </property>
+  </property>
+  <property name="plugins" type="empty">
+    <property name="plugin-1" type="string" value="whiskermenu"/>
+    <property name="plugin-2" type="string" value="systray"/>
+    <property name="plugin-3" type="string" value="clock"/>
+  </property>
+</channel>
+XML
+
+# Autostart Dock & Network
 cat > /etc/xdg/autostart/plank.desktop <<'XML'
 [Desktop Entry]
 Type=Application
@@ -133,7 +209,7 @@ X-GNOME-Autostart-enabled=true
 Name=Plank
 XML
 
-# Set Dock bawah otomatis
+mkdir -p /etc/skel/.config/plank/dock1/
 cat > /etc/skel/.config/plank/dock1/settings <<'EOT'
 [PlankDockPreferences]
 Theme=Transparent
@@ -141,7 +217,7 @@ Position=3
 IconSize=48
 EOT
 
-# 7. LIGHTDM (AUTOLOGIN KE XFCE)
+# Autologin
 cat > /etc/lightdm/lightdm.conf <<'EOT'
 [Seat:*]
 autologin-user=arlys
@@ -159,9 +235,9 @@ EOT
 
 systemctl enable lightdm NetworkManager || true
 EOF
-chmod +x config/hooks/live/0100-arlys-v3.hook.chroot
+chmod +x config/hooks/live/0100-arlys-v4.hook.chroot
 
-echo "[5/5] Build ISO (20-40 menit)..."
+echo "[5/5] Build ISO V4 (20-40 menit)..."
 lb config \
     --mode debian \
     --distribution bookworm \
@@ -176,11 +252,11 @@ lb config \
     --bootloader "grub-efi grub-pc" \
     --debian-installer false \
     --iso-application "ARLYS OS" \
-    --iso-volume "ARLYS_OS_V3" \
+    --iso-volume "ARLYS_KOIOS" \
     --memtest none \
     --bootappend-live "boot=live components quiet splash"
 
 lb build
 
 mkdir -p "$DIST_DIR"
-mv live-image-amd64.hybrid.iso "$DIST_DIR/ARLYS-OS-V3.iso"
+mv live-image-amd64.hybrid.iso "$DIST_DIR/ARLYS-OS-V4.iso"
